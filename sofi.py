@@ -230,14 +230,21 @@ class SofiBot:
     
     def detect_shell_button(self, button_positions):
         if self.coordinates_similar(button_positions[1], button_positions[2]):
-            shell_index = 2
-            spacing = abs(button_positions[1][0] - button_positions[0][0])
-            missing_x = button_positions[1][0] + spacing
-            missing_y = button_positions[1][1]
-            missing_button = (missing_x, missing_y)
-            print(f"Shell button detected at position 3 (index {shell_index})")
-            return shell_index, [button_positions[0], button_positions[1], missing_button]
-        
+            x_diff = abs(button_positions[1][0] - button_positions[0][0])
+            if x_diff > 100:
+                shell_index = 1
+                new_x2 = button_positions[0][0] + (x_diff // 2)
+                updated_button2 = (new_x2, button_positions[1][1])
+                print(f"Shell button detected at position 2 (index {shell_index})")
+                return shell_index, [button_positions[0], updated_button2, button_positions[2]]
+            else:
+                shell_index = 2
+                spacing = abs(button_positions[1][0] - button_positions[0][0])
+                missing_x = button_positions[1][0] + spacing
+                missing_y = button_positions[1][1]
+                missing_button = (missing_x, missing_y)
+                print(f"Shell button detected at position 3 (index {shell_index})")
+                return shell_index, [button_positions[0], button_positions[1], missing_button]
         elif self.coordinates_similar(button_positions[0], button_positions[1]):
             shell_index = 0
             spacing = abs(button_positions[2][0] - button_positions[1][0])
@@ -340,7 +347,7 @@ class SofiBot:
                 print(f"Could not find line {line_num}1 or {line_num}]")
                 return []
             card_lines.append(found_line)
-                    
+
         heart_patterns = [
             r'@o',  # Handle OCR misreading 0 as o
             r'@0',  # Handle @0 pattern
