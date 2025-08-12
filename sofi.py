@@ -333,7 +333,7 @@ class SofiBot:
         for line_num in [1, 2, 3]:
             found_line = None
             for line in lines:
-                if re.match(f'^{line_num}[1\]]', line.strip()):
+                if re.match(f'^{line_num}[1\\]]', line.strip()):
                     found_line = line
                     break
             if found_line is None:
