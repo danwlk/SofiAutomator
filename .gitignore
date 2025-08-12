@@ -1,0 +1,5 @@
+# Virtual Environment
+venv/
+
+# Configuration file (contains user-specific settings)
+sofi_config.json
