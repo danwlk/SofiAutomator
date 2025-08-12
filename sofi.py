@@ -378,6 +378,7 @@ class SofiBot:
             r'@(\d+)',  # @number pattern (when OCR works correctly)
             r'@\)(\d+)',  # @)number pattern
             r'@[^_](\d+)',  # @(any character)number pattern
+            r'@\)[^_](\d+)',  # @)(any character)number pattern
         ]
         
         heart_counts = []
@@ -449,10 +450,10 @@ class SofiBot:
             pyautogui.click(button_coords[0], button_coords[1])
             print(f"✅ Clicked best non-shell button {actual_best_index + 1} at ({button_coords[0]}, {button_coords[1]})")
             
-            time.sleep(2)
+            time.sleep(5)
             shell_coords = buttons[shell_index]
-            pyautogui.click(shell_coords[0], shell_coords[1])
-            print(f"✅ Clicked shell button {shell_index + 1} at ({shell_coords[0]}, {shell_coords[1]})")
+            pyautogui.click(shell_coords[0], shell_coords[1] - 70)
+            print(f"✅ Clicked shell button {shell_index + 1} at ({shell_coords[0]}, {shell_coords[1] - 70})")
             
             self.pause_10_seconds()
             self.send_chat('st temp')
