@@ -246,13 +246,36 @@ class SofiBot:
                 print(f"Shell button detected at position 3 (index {shell_index})")
                 return shell_index, [button_positions[0], button_positions[1], missing_button]
         elif self.coordinates_similar(button_positions[0], button_positions[1]):
-            shell_index = 0
-            spacing = abs(button_positions[2][0] - button_positions[1][0])
-            missing_x = button_positions[1][0] - spacing
-            missing_y = button_positions[1][1]
-            missing_button = (missing_x, missing_y)
-            print(f"Shell button detected at position 1 (index {shell_index})")
-            return shell_index, [missing_button, button_positions[1], button_positions[2]]
+            x_diff = abs(button_positions[2][0] - button_positions[1][0])
+            if x_diff > 100:
+                shell_index = 1
+                new_x2 = button_positions[0][0] + (x_diff // 2)
+                updated_button2 = (new_x2, button_positions[1][1])
+                print(f"Shell button detected at position 2 (index {shell_index})")
+                return shell_index, [button_positions[0], updated_button2, button_positions[2]]
+            else:
+                shell_index = 0
+                spacing = abs(button_positions[2][0] - button_positions[1][0])
+                missing_x = button_positions[1][0] - spacing
+                missing_y = button_positions[1][1]
+                missing_button = (missing_x, missing_y)
+                print(f"Shell button detected at position 1 (index {shell_index})")
+                return shell_index, [missing_button, button_positions[1], button_positions[2]]
+        elif self.coordinates_similar(button_positions[0], button_positions[2]):
+            if button_positions[0][0] > button_positions[1][0]:
+                shell_index = 0
+                spacing = button_positions[2][0] - button_positions[1][0]
+                new_x1 = button_positions[1][0] - spacing
+                updated_button1 = (new_x1, button_positions[0][1])
+                print(f"Shell button detected at position 1 (index {shell_index})")
+                return shell_index, [updated_button1, button_positions[1], button_positions[2]]
+            elif button_positions[2][0] < button_positions[1][0]:
+                shell_index = 2
+                spacing = button_positions[1][0] - button_positions[0][0]
+                new_x3 = button_positions[1][0] + spacing
+                updated_button3 = (new_x3, button_positions[2][1])
+                print(f"Shell button detected at position 3 (index {shell_index})")
+                return shell_index, [button_positions[0], button_positions[1], updated_button3]
         
         return None, button_positions
     
@@ -409,6 +432,8 @@ class SofiBot:
             pyautogui.click(button_coords[0], button_coords[1])
             print(f"✅ Clicked button {best_index + 1} at ({button_coords[0]}, {button_coords[1]})")
             self.pause_10_seconds()
+            self.send_chat('st temp')
+            time.sleep(2)
             self.send_chat('sv')
             self.pause_10_seconds()
         else:
@@ -424,12 +449,14 @@ class SofiBot:
             pyautogui.click(button_coords[0], button_coords[1])
             print(f"✅ Clicked best non-shell button {actual_best_index + 1} at ({button_coords[0]}, {button_coords[1]})")
             
-            time.sleep(1)
+            time.sleep(2)
             shell_coords = buttons[shell_index]
             pyautogui.click(shell_coords[0], shell_coords[1])
             print(f"✅ Clicked shell button {shell_index + 1} at ({shell_coords[0]}, {shell_coords[1]})")
             
             self.pause_10_seconds()
+            self.send_chat('st temp')
+            time.sleep(2)
             self.send_chat('sv')
             self.pause_10_seconds()
     
