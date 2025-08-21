@@ -37,6 +37,7 @@ class SofiBot:
             self.chat_area = saved_config.get('chat_area')
             self.input_area = saved_config.get('input_area')
             self.username = saved_config.get('username')
+            self.button_x_coords = saved_config.get('button_x_coords')
             
             if self.chat_area and self.input_area and self.username:
                 print("✅ Loaded saved configuration!")
@@ -44,6 +45,8 @@ class SofiBot:
                 print(f"Chat area: {self.chat_area}")
                 print(f"Input area: {self.input_area}")
                 print(f"Username: {self.username}")
+                if self.button_x_coords:
+                    print(f"Button X coordinates: {self.button_x_coords}")
                 return True
             else:
                 print("\n❌ No configuration found!")
@@ -57,7 +60,8 @@ class SofiBot:
                 },
                 'chat_area': None,
                 'input_area': None,
-                'username': None
+                'username': None,
+                'button_x_coords': None
             }
             with open(self.config_file, 'w') as f:
                 json.dump(default_config, f, indent=2)
@@ -71,7 +75,8 @@ class SofiBot:
                 'delays': self.delays,
                 'chat_area': self.chat_area,
                 'input_area': self.input_area,
-                'username': self.username
+                'username': self.username,
+                'button_x_coords': getattr(self, 'button_x_coords', None)
             }
             
             with open(self.config_file, 'w') as f:
@@ -81,6 +86,15 @@ class SofiBot:
             
         except Exception as e:
             print(f"Error saving config: {e}")
+    
+    def save_button_coordinates(self, button_coordinates):
+        if len(button_coordinates) == 3:
+            x_coords = [coord[0] for coord in button_coordinates]
+            self.button_x_coords = x_coords
+            self.save_config()
+            print(f"✅ Saved button X coordinates to config: {x_coords}\n")
+            return True
+        return False
     
     def run_configuration(self):
         print("\n" + "="*17)
@@ -129,6 +143,8 @@ class SofiBot:
                     break
                 else:
                     print("Username cannot be empty. Please enter a valid username.")
+                    
+            self.button_x_coords = None
 
             self.save_config()
             print("Your coordinates have been saved and will be loaded automatically next time.\n")
@@ -161,8 +177,7 @@ class SofiBot:
             print(f"Error extracting text: {e}")
             return ""
     
-    def detect_buttons(self):
-        print("🔍 Detecting button positions from screenshot...")
+    def detect_buttons(self, first_detection=True):
 
         screenshot = self.take_screenshot(region=self.chat_area)
         img_cv = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
@@ -193,13 +208,19 @@ class SofiBot:
         
         if len(coordinates) == 3:
             print(f"✅ Found all 3 buttons: {coordinates}\n")
-            print("🔍 Checking for shell buttons...")
-            shell_index, updated_coordinates = self.detect_shell_button(coordinates)
-            if shell_index is not None:
-                print(f"✅ Updated button coordinates: {updated_coordinates}\n")
+            
+            if first_detection:
+                print("🔍 Checking for shell buttons...")
+                shell_index, updated_coordinates = self.detect_shell_button(coordinates)
+                if len(shell_index) > 0:
+                    print(f"✅ Updated button coordinates: {updated_coordinates}\n")
+                else:
+                    print("✅ No shell buttons found\n")
+                    if not hasattr(self, 'button_x_coords') or self.button_x_coords is None:
+                        self.save_button_coordinates(coordinates)
+                return updated_coordinates, shell_index
             else:
-                print("✅ No shell buttons found\n")
-            return updated_coordinates, shell_index
+                return coordinates, None
         else:
             print(f"❌ Found {len(coordinates)} buttons, expected 3")
             return []
@@ -229,55 +250,75 @@ class SofiBot:
         return abs(pos1[0] - pos2[0]) <= tolerance
     
     def detect_shell_button(self, button_positions):
-        if self.coordinates_similar(button_positions[1], button_positions[2]):
+        if not hasattr(self, 'button_x_coords') or self.button_x_coords is None:
+            print("❌ No saved button coordinates - assuming no shell buttons")
+            return [], button_positions
+        
+        if self.coordinates_similar(button_positions[0], button_positions[1]) and self.coordinates_similar(button_positions[1], button_positions[2]):
+            if self.coordinates_similar(self.button_x_coords[0], button_positions[0][0]):
+                shell_index = [1, 2]
+                updated_positions = list(button_positions)
+                for i in shell_index:
+                    updated_positions[i] = (self.button_x_coords[i], button_positions[i][1])
+                print(f"2 Shell buttons detected at index {shell_index}")
+                return shell_index, updated_positions
+            elif self.coordinates_similar(self.button_x_coords[1], button_positions[1][0]):
+                shell_index = [0, 2]
+                updated_positions = list(button_positions)
+                for i in shell_index:
+                    updated_positions[i] = (self.button_x_coords[i], button_positions[i][1])
+                print(f"2 Shell buttons detected at index {shell_index}")
+                return shell_index, updated_positions
+            elif self.coordinates_similar(self.button_x_coords[2], button_positions[2][0]):
+                shell_index = [0, 1]
+                updated_positions = list(button_positions)
+                for i in shell_index:
+                    updated_positions[i] = (self.button_x_coords[i], button_positions[i][1])
+                print(f"2 Shell buttons detected at index {shell_index}")
+                return shell_index, updated_positions 
+        elif self.coordinates_similar(button_positions[1], button_positions[2]):
             x_diff = abs(button_positions[1][0] - button_positions[0][0])
             if x_diff > 100:
                 shell_index = 1
-                new_x2 = button_positions[0][0] + (x_diff // 2)
-                updated_button2 = (new_x2, button_positions[1][1])
+                updated_positions = list(button_positions)
+                updated_positions[shell_index] = (self.button_x_coords[shell_index], button_positions[shell_index][1])
                 print(f"Shell button detected at position 2 (index {shell_index})")
-                return shell_index, [button_positions[0], updated_button2, button_positions[2]]
+                return [shell_index], updated_positions
             else:
                 shell_index = 2
-                spacing = abs(button_positions[1][0] - button_positions[0][0])
-                missing_x = button_positions[1][0] + spacing
-                missing_y = button_positions[1][1]
-                missing_button = (missing_x, missing_y)
+                updated_positions = list(button_positions)
+                updated_positions[shell_index] = (self.button_x_coords[shell_index], button_positions[shell_index][1])
                 print(f"Shell button detected at position 3 (index {shell_index})")
-                return shell_index, [button_positions[0], button_positions[1], missing_button]
+                return [shell_index], updated_positions
         elif self.coordinates_similar(button_positions[0], button_positions[1]):
             x_diff = abs(button_positions[2][0] - button_positions[1][0])
             if x_diff > 100:
                 shell_index = 1
-                new_x2 = button_positions[0][0] + (x_diff // 2)
-                updated_button2 = (new_x2, button_positions[1][1])
+                updated_positions = list(button_positions)
+                updated_positions[shell_index] = (self.button_x_coords[shell_index], button_positions[shell_index][1])
                 print(f"Shell button detected at position 2 (index {shell_index})")
-                return shell_index, [button_positions[0], updated_button2, button_positions[2]]
+                return [shell_index], updated_positions
             else:
                 shell_index = 0
-                spacing = abs(button_positions[2][0] - button_positions[1][0])
-                missing_x = button_positions[1][0] - spacing
-                missing_y = button_positions[1][1]
-                missing_button = (missing_x, missing_y)
+                updated_positions = list(button_positions)
+                updated_positions[shell_index] = (self.button_x_coords[shell_index], button_positions[shell_index][1])
                 print(f"Shell button detected at position 1 (index {shell_index})")
-                return shell_index, [missing_button, button_positions[1], button_positions[2]]
+                return [shell_index], updated_positions
         elif self.coordinates_similar(button_positions[0], button_positions[2]):
             if button_positions[0][0] > button_positions[1][0]:
                 shell_index = 0
-                spacing = button_positions[2][0] - button_positions[1][0]
-                new_x1 = button_positions[1][0] - spacing
-                updated_button1 = (new_x1, button_positions[0][1])
+                updated_positions = list(button_positions)
+                updated_positions[shell_index] = (self.button_x_coords[shell_index], button_positions[shell_index][1])
                 print(f"Shell button detected at position 1 (index {shell_index})")
-                return shell_index, [updated_button1, button_positions[1], button_positions[2]]
+                return [shell_index], updated_positions
             elif button_positions[2][0] < button_positions[1][0]:
                 shell_index = 2
-                spacing = button_positions[1][0] - button_positions[0][0]
-                new_x3 = button_positions[1][0] + spacing
-                updated_button3 = (new_x3, button_positions[2][1])
+                updated_positions = list(button_positions)
+                updated_positions[shell_index] = (self.button_x_coords[shell_index], button_positions[shell_index][1])
                 print(f"Shell button detected at position 3 (index {shell_index})")
-                return shell_index, [button_positions[0], button_positions[1], updated_button3]
+                return [shell_index], updated_positions
         
-        return None, button_positions
+        return [], button_positions
     
     def wait_for_nori_ping(self):
         print(f"Waiting for Nori's ping @{self.username}...")
@@ -288,12 +329,15 @@ class SofiBot:
                 print("❌ Failed to take screenshot")
                 continue
             text = self.extract_text_from_image(screenshot)
-            
             patterns = [
                 f"@{self.username}.*you can now drop",
                 f"@{self.username}.*you can now drop!",
                 f"@{self.username}.*youcannowdrop",
                 f"@{self.username}.*youcannowdrop!",
+                r"you can now drop",
+                r"you can now drop!",
+                r"youcannowdrop",
+                r"youcannowdrop!",
             ]
             for pattern in patterns:
                 if re.search(pattern, text.lower()):
@@ -363,11 +407,11 @@ class SofiBot:
         for line_num in [1, 2, 3]:
             found_line = None
             for line in lines:
-                if re.match(f'^{line_num}[1\\]]', line.strip()):
+                if re.match(f'^{line_num}[1\\]\\)]', line.strip()):
                     found_line = line
                     break
             if found_line is None:
-                print(f"Could not find line {line_num}1 or {line_num}]")
+                print(f"Could not find line {line_num}1, {line_num}], or {line_num})")
                 return []
             card_lines.append(found_line)
 
@@ -379,6 +423,13 @@ class SofiBot:
             r'@\)(\d+)',  # @)number pattern
             r'@[^_](\d+)',  # @(any character)number pattern
             r'@\)[^_](\d+)',  # @)(any character)number pattern
+            r'Qo',  # Handle OCR misreading @0 as Qo
+            r'Q0',  # Handle OCR misreading @0 as Q0
+            r'Q\)o',  # Handle OCR misreading @)0 as Q)o
+            r'Q(\d+)',  # Handle OCR misreading @number as Qnumber
+            r'Q\)(\d+)',  # Handle OCR misreading @)number as Q)number
+            r'Q[^_](\d+)',  # Handle OCR misreading @(any character)number as Q(any character)number
+            r'Q\)[^_](\d+)',  # Handle OCR misreading @)(any character)number as Q)(any character)number
         ]
         
         heart_counts = []
@@ -388,11 +439,7 @@ class SofiBot:
                 matches = re.findall(pattern, line, re.IGNORECASE)
                 if matches:
                     print(f"{line} matched pattern {i+1}: {matches}")
-                    if i == 0:  # @o pattern
-                        line_heart_count = 0
-                    elif i == 1:  # @0 pattern
-                        line_heart_count = 0
-                    elif i == 2:  # @)o pattern
+                    if i in [0, 1, 2, 7, 8, 9]:  # @o, @0, @)o, Qo, Q0, Q)o patterns (all represent 0 hearts)
                         line_heart_count = 0
                     else:
                         if isinstance(matches[0], tuple):
@@ -421,7 +468,7 @@ class SofiBot:
             print("❌ Could not find all buttons, skipping cycle.")
             return
         
-        if shell_index is None:
+        if len(shell_index) == 0:
             best_index = heart_counts.index(max(heart_counts))
             best_count = heart_counts[best_index]
             print(f"\033[92mBest card: #{best_index + 1} with {best_count} hearts\033[0m\n")
@@ -438,8 +485,8 @@ class SofiBot:
             self.send_chat('sv')
             self.pause_10_seconds()
         else:
-            non_shell_heart_counts = [count for i, count in enumerate(heart_counts) if i != shell_index]
-            non_shell_indices = [i for i in range(len(heart_counts)) if i != shell_index]
+            non_shell_heart_counts = [count for i, count in enumerate(heart_counts) if i not in shell_index]
+            non_shell_indices = [i for i in range(len(heart_counts)) if i not in shell_index]
             best_non_shell_index = non_shell_heart_counts.index(max(non_shell_heart_counts))
             best_count = non_shell_heart_counts[best_non_shell_index]
             actual_best_index = non_shell_indices[best_non_shell_index]
@@ -450,10 +497,19 @@ class SofiBot:
             pyautogui.click(button_coords[0], button_coords[1])
             print(f"✅ Clicked best non-shell button {actual_best_index + 1} at ({button_coords[0]}, {button_coords[1]})")
             
-            time.sleep(5)
-            shell_coords = buttons[shell_index]
-            pyautogui.click(shell_coords[0], shell_coords[1] - 70)
-            print(f"✅ Clicked shell button {shell_index + 1} at ({shell_coords[0]}, {shell_coords[1] - 70})")
+            for i in shell_index:
+                time.sleep(7)
+                updated_buttons, _ = self.detect_buttons(first_detection=False)
+                if len(updated_buttons) == 0:
+                    print("❌ Could not re-detect buttons for shell click, using original y-coordinates")
+                    shell_coords = [self.button_x_coords[i], buttons[i][1]-70]
+                    pyautogui.click(shell_coords[0], shell_coords[1] - 70)
+                    print(f"✅ Clicked shell button {i + 1} at ({shell_coords[0]}, {shell_coords[1] - 70})")
+                else:
+                    saved_x = self.button_x_coords[i]
+                    detected_y = updated_buttons[i][1]
+                    pyautogui.click(saved_x, detected_y)
+                    print(f"✅ Clicked shell button {i + 1} at ({saved_x}, {detected_y})")
             
             self.pause_10_seconds()
             self.send_chat('st temp')
