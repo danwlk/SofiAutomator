@@ -255,21 +255,21 @@ class SofiBot:
             return [], button_positions
         
         if self.coordinates_similar(button_positions[0], button_positions[1]) and self.coordinates_similar(button_positions[1], button_positions[2]):
-            if self.coordinates_similar(self.button_x_coords[0], button_positions[0][0]):
+            if self.coordinates_similar((self.button_x_coords[0], button_positions[0][1]), button_positions[0]):
                 shell_index = [1, 2]
                 updated_positions = list(button_positions)
                 for i in shell_index:
                     updated_positions[i] = (self.button_x_coords[i], button_positions[i][1])
                 print(f"2 Shell buttons detected at index {shell_index}")
                 return shell_index, updated_positions
-            elif self.coordinates_similar(self.button_x_coords[1], button_positions[1][0]):
+            elif self.coordinates_similar((self.button_x_coords[1], button_positions[1][1]), button_positions[1]):
                 shell_index = [0, 2]
                 updated_positions = list(button_positions)
                 for i in shell_index:
                     updated_positions[i] = (self.button_x_coords[i], button_positions[i][1])
                 print(f"2 Shell buttons detected at index {shell_index}")
                 return shell_index, updated_positions
-            elif self.coordinates_similar(self.button_x_coords[2], button_positions[2][0]):
+            elif self.coordinates_similar((self.button_x_coords[2], button_positions[2][1]), button_positions[2]):
                 shell_index = [0, 1]
                 updated_positions = list(button_positions)
                 for i in shell_index:
