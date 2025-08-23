@@ -403,15 +403,16 @@ class SofiBot:
         
         text = self.extract_text_from_image(screenshot)
         lines = text.split('\n')
+        print(lines)
         card_lines = []
         for line_num in [1, 2, 3]:
             found_line = None
             for line in lines:
-                if re.match(f'^{line_num}[1\\]\\)]', line.strip()):
+                if re.match(f'^{line_num}[1\\]\\)-]', line.strip()):
                     found_line = line
                     break
             if found_line is None:
-                print(f"Could not find line {line_num}1, {line_num}], or {line_num})")
+                print(f"Could not find line {line_num}1, {line_num}], {line_num}), or {line_num}-")
                 return []
             card_lines.append(found_line)
 
