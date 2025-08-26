@@ -11,8 +11,8 @@ import pytesseract
 import sys
 import threading
 
-# Configure Tesseract OCR path for Windows
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# Configure Tesseract OCR path for macOS
+pytesseract.pytesseract.tesseract_cmd = '/opt/homebrew/bin/tesseract'
 
 class SofiBot:
     def __init__(self):
@@ -403,12 +403,11 @@ class SofiBot:
         
         text = self.extract_text_from_image(screenshot)
         lines = text.split('\n')
-        print(lines)
         card_lines = []
         for line_num in [1, 2, 3]:
             found_line = None
             for line in lines:
-                if re.match(f'^{line_num}[1\\]\\)-]', line.strip()):
+                if re.match(f'^{line_num}[1\\]\\)\\-:]', line.strip()):
                     found_line = line
                     break
             if found_line is None:
