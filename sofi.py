@@ -527,7 +527,7 @@ class SofiBot:
             return False
         
         self.send_chat('sd')
-        self.loading_animation("Waiting for SOFI and Nori responses...", "Responses received\n", lambda: time.sleep(2))
+        self.loading_animation("Waiting for SOFI and Nori responses...", "Responses received\n", lambda: time.sleep(3))
         
         heart_counts = self.get_heart_counts()
         self.click_best_card(heart_counts)
