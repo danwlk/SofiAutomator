@@ -10,9 +10,14 @@ import os
 import pytesseract
 import sys
 import threading
+import platform
 
-# Configure Tesseract OCR path for macOS
-pytesseract.pytesseract.tesseract_cmd = '/opt/homebrew/bin/tesseract'
+if platform.system() == "Darwin":  # macOS
+    pytesseract.pytesseract.tesseract_cmd = '/opt/homebrew/bin/tesseract'
+elif platform.system() == "Windows":  # Windows
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+else:  # Linux and other Unix-like systems
+    pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
 
 class SofiBot:
     def __init__(self):
