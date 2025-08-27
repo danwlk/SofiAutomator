@@ -385,6 +385,12 @@ class SofiBot:
         animation_thread.start()
         try:
             result = operation_func()
+        except KeyboardInterrupt:
+            stop_animation.set()
+            animation_thread.join()
+            sys.stdout.write('\r' + ' ' * (len(loading_text) + 2) + '\r')
+            print("\nBot stopped by user")
+            raise
         except Exception as e:
             stop_animation.set()
             animation_thread.join()
