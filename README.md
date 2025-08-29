@@ -1,80 +1,89 @@
 # SOFI Discord Card Bot
 
-!!!ONLY WINDOWS!!!
+Supports Windows and macOS
 An automation bot for Discord card-collecting games involving SOFI and Nori bots.
 
 ## Features
 
--   Automatically detects when Nori pings you to drop cards
--   Sends the `sd` command automatically
--   Reads heart counts from Nori's response
--   Clicks the card with the highest heart count
--   Clicks event cards
--   Works with multi-monitor setups
+- Automatically detects when Nori pings you to drop cards
+- Sends the `sd` command automatically
+- Reads heart counts from Nori's response
+- Clicks the card with the highest heart count
+- Clicks event cards
+- Works with multi-monitor setups
 
 ## Prerequisites
 
 ### 1. Python Installation
 
--   Install Python 3.8 or higher from [python.org](https://python.org)
--   On Windows, use `py` command instead of `python`
+- Install Python 3.8 or higher from [python.org](https://python.org)
+- On Windows, use `py`; on macOS, use `python3`
 
 ### 2. Tesseract OCR Installation
 
+Windows (winget):
 winget install UB-Mannheim.TesseractOCR
+
+macOS (Homebrew):
+brew install tesseract
 
 ## Installation
 
-1. **Download the files:**
+1. **Download the files or clone the repository:**
 
-    - `sofi.py` - Main bot script
-    - `requirements.txt` - Python dependencies
-    - `images/button1.png`, `images/button2.png`, `images/button3.png` - Button templates
-    - `README.md` - This file
+   - `sofi.py` - Main bot script
+   - `requirements.txt` - Python dependencies
+   - `images/button1.png`, `images/button2.png`, `images/button3.png` - Button templates
+   - `README.md` - This file
 
 2. **Navigate to sofi directory:**
 
-    Open command prompt
-    cd "your directory to sofi file"
+   Open command prompt
+   cd "your directory to sofi file"
 
-2. **Create a virtual environment (NEEDED ON EVERY LAUNCH):**
+3. **Create a virtual environment (ONE TIME SETUP):**
 
-    py -m venv venv
+   py -m venv venv # Windows
+   python3 -m venv venv # macOS
 
-3. **Activate the virtual environment:**
+4. **Activate the virtual environment:**
 
-    venv\Scripts\activate
+   venv\Scripts\activate # Windows
+   source venv/bin/activate # macOS
 
-4. **Install dependencies:**
+5. **Install dependencies:**
 
-    pip install -r requirements.txt
+   pip install -r requirements.txt
 
-    **If you get build errors, try:**
+   **If you get build errors, try:**
 
-    # Update pip first
-    python -m pip install --upgrade pip
+   # Update pip first
 
-    # Install packages individually
-    pip install pyautogui
-    pip install Pillow
-    pip install pytesseract
-    pip install opencv-python
-    pip install numpy
+   python -m pip install --upgrade pip
+
+   # Install packages individually
+
+   pip install pyautogui
+   pip install Pillow
+   pip install pytesseract
+   pip install opencv-python
+   pip install numpy
 
 ## Configuration
 
 1. **Run the bot for the first time:**
 
-    py sofi.py
+   py sofi.py      # Windows
+   python3 sofi.py # macOS
 
 2. **The bot will automatically create a default `sofi_config.json` file** with default delay settings
 
 3. **Choose option 1 to run configuration** (required for first-time setup)
 
-    - The bot will guide you through setting up coordinates
-    - Click on the chat area when prompted
-    - Click on the input area when prompted
-    - Enter your Discord username
+   - The bot will guide you through setting up coordinates
+   - Click on the chat area when prompted
+   - Click on the input area when prompted
+   - Enter your Discord username
 
 4. **Configuration is saved to `sofi_config.json`** with both delays and user settings
 
@@ -82,16 +91,18 @@ winget install UB-Mannheim.TesseractOCR
 
 1. **Make sure Discord is open and visible**
 2. **Run the bot:**
-    ```bash
-    py sofi.py
-    ```
+   ```bash
+   py sofi.py
+   # macOS
+   python3 sofi.py
+   ```
 3. **Choose option 1 to start automation**
 4. **The bot will:**
-    - Wait for Nori's ping
-    - Send `sd` command automatically
-    - Read heart counts from Nori's response
-    - Click the best card
-    - Repeat the cycle
+   - Wait for Nori's ping
+   - Send `sd` command automatically
+   - Read heart counts from Nori's response
+   - Click the best card
+   - Repeat the cycle
 
 ## Stopping the Bot
 
@@ -114,6 +125,6 @@ sofi-bot/
 
 ## Notes
 
--   The bot works best with Discord in dark mode
--   Keep Discord window size consistent
--   Configuration is persistent between runs
+- The bot works best with Discord in dark mode
+- Keep Discord window size consistent
+- Configuration is persistent between runs
